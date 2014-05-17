@@ -29,12 +29,12 @@ char i2c_read ( int fd, uint16_t slave, uint8_t offset, uint8_t *buf )  {
 
   msg[0].slave = slave;
   msg[0].flags = !IIC_M_RD;
-  msg[0].len = sizeof( offset );
+  msg[0].len = sizeof( uint8_t );
   msg[0].buf = &offset;
 
   msg[1].slave = slave;
   msg[1].flags = IIC_M_RD;
-  msg[1].len = sizeof( buf );
+  msg[1].len = sizeof( uint8_t );
   msg[1].buf = buf;
 
   rdwr.msgs = msg;
@@ -58,8 +58,8 @@ char i2c_write ( int fd, uint16_t slave, uint8_t offset, uint8_t val )  {
   buf[0] = offset;
   buf[1] = val;
   msg.slave = slave;
-  msg.flags = 0;
-  msg.len = sizeof( buf );
+  msg.flags = !IIC_M_RD;
+  msg.len = 2*sizeof( uint8_t );
   msg.buf = buf;
 
   rdwr.msgs = &msg;
@@ -112,13 +112,13 @@ int main ( int argc, char *argv[] )  {
     tloc = time( &tloc );
     ptm = localtime( &tloc );
 
-    i2c_write( fd, slave, 0, ptm->tm_sec );
-    i2c_write( fd, slave, 1, ptm->tm_min );
-    i2c_write( fd, slave, 2, ptm->tm_hour );
-    i2c_write( fd, slave, 3, ptm->tm_wday+1 );
-    i2c_write( fd, slave, 4, ptm->tm_mday );
-    i2c_write( fd, slave, 5, ptm->tm_mon+1 );
-    i2c_write( fd, slave, 6, ptm->tm_year-100 );
+    i2c_write( fd, slave, 0, bin2bcd(ptm->tm_sec) );
+    i2c_write( fd, slave, 1, bin2bcd(ptm->tm_min) );
+    i2c_write( fd, slave, 2, bin2bcd(ptm->tm_hour) );
+    i2c_write( fd, slave, 3, bin2bcd(ptm->tm_wday+1) );
+    i2c_write( fd, slave, 4, bin2bcd(ptm->tm_mday) );
+    i2c_write( fd, slave, 5, bin2bcd(ptm->tm_mon+1) );
+    i2c_write( fd, slave, 6, bin2bcd(ptm->tm_year-100) );
 
     exit(0);
   }
@@ -135,7 +135,7 @@ int main ( int argc, char *argv[] )  {
     hh = bcd2bin(buf & 0x3F);
 
     i2c_read( fd, slave, 3, &buf );
-    wd = bcd2bin((buf - 1) & 0x07);
+    wd = bcd2bin((buf & 0x07) - 1);
 
     i2c_read( fd, slave, 4, &buf );
     d = bcd2bin(buf & 0x3F);
