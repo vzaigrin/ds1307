@@ -110,7 +110,7 @@ int main ( int argc, char *argv[] )  {
   if ( fl == WRITE )  {
 
     tloc = time( &tloc );
-    ptm = localtime( &tloc );
+    ptm = gmtime( &tloc );
 
     i2c_write( fd, slave, 0, bin2bcd(ptm->tm_sec) );
     i2c_write( fd, slave, 1, bin2bcd(ptm->tm_min) );
@@ -146,7 +146,7 @@ int main ( int argc, char *argv[] )  {
     i2c_read( fd, slave, 6, &buf );
     y = 2000 + bcd2bin(buf);
 
-    printf("%.2d:%.2d:%.2d %.2d/%.2d/%.4d\n", hh, mm, ss, d, m, y );
+    printf("%.2d:%.2d:%.2d %.2d/%.2d/%.4d UTC\n", hh, mm, ss, d, m, y );
     
     exit(0);
   }
